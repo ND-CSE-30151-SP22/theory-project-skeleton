@@ -36,10 +36,45 @@ assert_false () {
 if [ -x $SUBMIT/parse_re ]; then
   for REGEXP in "(ab|a)*" "(a|b)*aba" "" "a" "a*" "ab" "a|b" "a*b*" "(ab)*" "ab|cd" "(ab)|(cd)" "a*|b*" "(a|b)*" "(a)" "((a))" "()" "|" "(|)"; do
     echo -n 'parse_re "'"$REGEXP"'": '
-    assert_equal $($BIN/parse_re "$REGEXP") $($SUBMIT/parse_re "$REGEXP")
+    assert_equal "$($BIN/parse_re "$REGEXP")" "$($SUBMIT/parse_re "$REGEXP")"
   done
 else
   echo "parse_re: SKIPPED"
+fi
+
+if [ -x $SUBMIT/string_nfa ]; then
+  for W in "" "a" "ab"; do
+    echo -n "string_nfa \"$W\": "
+    $BIN/compare_nfa <($BIN/string_nfa "$W") <($SUBMIT/string_nfa "$W") >/dev/null
+    assert_true
+  done
+else
+  echo "string_nfa: SKIPPED"
+fi
+
+for OP in union concat; do
+  if [ -x $SUBMIT/${OP}_nfa ]; then
+    for NFA1 in $EXAMPLES/sipser-n{1,2,3,4}.nfa; do
+      for NFA2 in $EXAMPLES/sipser-n{1,2,3,4}.nfa; do
+
+        echo -n "${OP}_nfa $(basename $NFA1) $(basename $NFA2): "
+        $BIN/compare_nfa <($BIN/${OP}_nfa $NFA1 $NFA2) <($SUBMIT/${OP}_nfa $NFA1 $NFA2) >/dev/null
+        assert_true
+      done
+    done
+  else
+    echo "${OP}_nfa: SKIPPED"
+  fi
+done
+
+if [ -x $SUBMIT/star_nfa ]; then
+  for NFA in $EXAMPLES/sipser-n{1,2,3,4}.nfa; do
+    echo -n "star_nfa $(basename $NFA): "
+    $BIN/compare_nfa <($BIN/star_nfa $NFA) <($SUBMIT/star_nfa $NFA) >/dev/null
+    assert_true
+  done
+else
+  echo "star_nfa: SKIPPED"
 fi
 
 if [ -x $SUBMIT/re_to_nfa ]; then
@@ -69,6 +104,11 @@ if [ -x $SUBMIT/agrep ]; then
 	assert_equal $(echo "$W" | $BIN/agrep "") $(echo "$W" | $SUBMIT/agrep "")
     done
 
+    for W in "" a; do
+	echo -n "agrep \"()*\" \"$W\": "
+	assert_equal $(echo "$W" | $BIN/agrep "()*") $(echo "$W" | $SUBMIT/agrep "()*")
+    done
+    
     echo "time agrep (this should look linear):"
     RE=
     W=

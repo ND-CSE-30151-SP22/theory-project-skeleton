@@ -18,9 +18,9 @@ assert_equal () {
 }
 
 if [ -x $SUBMIT/parse_re ]; then
-  for REGEXP in "(ab|a)*" "(a|b)*aba" "" "a" "a*" "ab" "a|b" "a*b*" "(ab)*" "ab|cd" "(ab)|(cd)" "a*|b*" "(a|b)*" "(a)" "((a))" "()" "|" "(|)" "()\1" "()()()()()()()()()()\10" "()()()()()()()()()()\g<10>" "()()()()()()()()()()\g<1>0"; do
-    echo -n 'parse_re -g -b "'"$REGEXP"'": '
-    assert_equal $($BIN/parse_re -g -b "$REGEXP") $($SUBMIT/parse_re -g -b "$REGEXP")
+  for REGEXP in "(ab|a)*" "(a|b)*aba" "" "a" "a*" "ab" "a|b" "a*b*" "(ab)*" "ab|cd" "(ab)|(cd)" "a*|b*" "(a|b)*" "(a)" "((a))" "()" "|" "(|)" "()\1" "()()()()()()()()()()\10" "()()()()()()()()()()\10*" "()()()()()()()()()()\g<10>" "()()()()()()()()()()\g<1>0"; do
+    echo -n 'parse_re "'"$REGEXP"'": '
+    assert_equal "$($BIN/parse_re "$REGEXP")" "$($SUBMIT/parse_re "$REGEXP")"
   done
 else
   echo "parse_re: SKIPPED"
@@ -29,6 +29,13 @@ fi
 if [ -x $SUBMIT/bgrep ]; then
     for REGEXP in "((a|b)*)\1" "(a|b)*\1"; do
 	for W in "" abb aba baabaa aabbaa; do
+	    echo -n "bgrep \"$REGEXP\" \"$W\": "
+	    assert_equal $(echo "$W" | $BIN/bgrep "$REGEXP") $(echo "$W" | $SUBMIT/bgrep "$REGEXP")
+	done
+    done
+
+    for REGEXP in "(aaa*)\1\1*" "()*"; do
+	for W in "" a aa aaa aaaa aaaaa; do
 	    echo -n "bgrep \"$REGEXP\" \"$W\": "
 	    assert_equal $(echo "$W" | $BIN/bgrep "$REGEXP") $(echo "$W" | $SUBMIT/bgrep "$REGEXP")
 	done
@@ -48,8 +55,20 @@ if [ -x $SUBMIT/cnf_to_re ]; then
 	else
 	    ANS="satisfiable"
 	fi
-	assert_equal $($BIN/cnf_sat "$PHI") $ANS
+	assert_equal $($BIN/sat "$PHI") $ANS
     done
+
+    echo "time cnf_to_re (log-log scale; this should look linear):"
+    PHI="(x|x|x)"
+    N=1
+    for I in $(seq 1 15); do
+	printf "n=%6d" "$N"
+	/usr/bin/time -p $SUBMIT/cnf_to_re "$PHI" 2>&1 >/dev/null |
+	    awk '/^(user|sys)/ { t += $2; } END { printf " t=%6.2f %*s\n", t, int(log(t*100)*10), "*"; }'
+	PHI="${PHI}&${PHI}"
+	N=$(($N+$N))
+    done
+
 else
     echo "cnf_to_re: SKIPPED"
 fi

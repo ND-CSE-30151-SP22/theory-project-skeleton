@@ -33,23 +33,44 @@ assert_equal () {
   fi
 }
 
-if [ -x $SUBMIT/run_nfa ]; then
-    for W in 010110 010; do
-	echo -n "run_nfa sipser-n1.nfa \"$W\": "
-	assert_equal $(echo $W | $BIN/run_nfa $EXAMPLES/sipser-n1.nfa) $(echo $W | $SUBMIT/run_nfa $EXAMPLES/sipser-n1.nfa)
+if [ -x $SUBMIT/nfa_path ]; then
+    for W in 010110; do
+	echo -n "nfa_path sipser-n1.nfa \"$W\": "
+	diff <($BIN/nfa_path $EXAMPLES/sipser-n1.nfa "$W" | head -1) <($SUBMIT/nfa_path $EXAMPLES/sipser-n1.nfa "$W" | head -1)
+	assert_true
     done
 
-    for W in "" 0 00 000 0000 00000 000000; do
-	echo -n "run_nfa sipser-n3.nfa \"$W\": "
-	assert_equal $(echo $W | $BIN/run_nfa $EXAMPLES/sipser-n3.nfa) $(echo $W | $SUBMIT/run_nfa $EXAMPLES/sipser-n3.nfa)
+    for W in "" 0 1 00 01 10 11 000 001 010 011 100 101 110 111; do
+	echo -n "nfa_path sipser-n1.nfa \"$W\": "
+	diff <($BIN/nfa_path $EXAMPLES/sipser-n1.nfa "$W") <($SUBMIT/nfa_path $EXAMPLES/sipser-n1.nfa "$W")
+	assert_true
+    done
+
+    for W in "" 000000; do
+	echo -n "nfa_path sipser-n3.nfa \"$W\": "
+	diff <($BIN/nfa_path $EXAMPLES/sipser-n3.nfa "$W" | head -1) <($SUBMIT/nfa_path $EXAMPLES/sipser-n3.nfa "$W" | head -1)
+	assert_true
+    done
+
+    for W in 0 00 000 0000 00000; do
+	echo -n "nfa_path sipser-n3.nfa \"$W\": "
+	diff <($BIN/nfa_path $EXAMPLES/sipser-n3.nfa "$W") <($SUBMIT/nfa_path $EXAMPLES/sipser-n3.nfa "$W")
+	assert_true
     done
 
     for W in "" a baba baa b bb babba; do
-	echo -n "run_nfa sipser-n4.nfa \"$W\": "
-	assert_equal $(echo $W | $BIN/run_nfa $EXAMPLES/sipser-n4.nfa) $(echo $W | $SUBMIT/run_nfa $EXAMPLES/sipser-n4.nfa)
+	echo -n "nfa_path sipser-n4.nfa \"$W\": "
+	diff <($BIN/nfa_path $EXAMPLES/sipser-n4.nfa "$W") <($SUBMIT/nfa_path $EXAMPLES/sipser-n4.nfa "$W")
+	assert_true
     done
 
-    echo "time run_nfa (this should look linear):"
+    for W in "" a; do
+	echo -n "nfa_path cycle.nfa \"$W\": "
+	diff <($BIN/nfa_path $EXAMPLES/cycle.nfa "$W" | head -1) <($SUBMIT/nfa_path $EXAMPLES/cycle.nfa "$W" | head -1)
+	assert_true
+    done
+
+    echo "time nfa_path (this should look linear):"
     RE=
     W=
     for I in $(seq 1 100); do
@@ -57,38 +78,13 @@ if [ -x $SUBMIT/run_nfa ]; then
 	W="${W}a"
 	if [ $(($I**2/1000)) -gt $((($I-1)**2/1000)) ]; then
 	    printf "n=%3d" "$I"
-	    echo $W |
-		/usr/bin/time -p $SUBMIT/run_nfa <($BIN/re_to_nfa $RE) 2>&1 >/dev/null |
+	    /usr/bin/time -p $SUBMIT/nfa_path <($BIN/re_to_nfa $RE) "$W" 2>&1 >/dev/null |
 		awk '/^(user|sys)/ { t += $2; } END { printf "%*s\n", t*100, "*"; }'
 	fi
     done
 
 else
-  echo "run_nfa: SKIPPED"
+  echo "nfa_path: SKIPPED"
 fi
 
-for OP in union concat; do
-  if [ -x $SUBMIT/${OP}_nfa ]; then
-    for NFA1 in $EXAMPLES/sipser-n{1,2,3,4}.nfa; do
-      for NFA2 in $EXAMPLES/sipser-n{1,2,3,4}.nfa; do
-
-        echo -n "${OP}_nfa $(basename $NFA1) $(basename $NFA2): "
-        $BIN/compare_nfa <($BIN/${OP}_nfa $NFA1 $NFA2) <($SUBMIT/${OP}_nfa $NFA1 $NFA2) >/dev/null
-        assert_true
-      done
-    done
-  else
-    echo "${OP}_nfa: SKIPPED"
-  fi
-done
-
-if [ -x $SUBMIT/star_nfa ]; then
-  for NFA in $EXAMPLES/sipser-n{1,2,3,4}.nfa; do
-    echo -n "star_nfa $(basename $NFA): "
-    $BIN/compare_nfa <($BIN/star_nfa $NFA) <($SUBMIT/star_nfa $NFA) >/dev/null
-    assert_true
-  done
-else
-  echo "star_nfa: SKIPPED"
-fi
 
