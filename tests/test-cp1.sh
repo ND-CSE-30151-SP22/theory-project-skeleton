@@ -34,13 +34,13 @@ assert_equal () {
 }
 
 if [ -x $SUBMIT/nfa_path ]; then
-    for W in 010110; do
+    for W in 010110 111; do
 	echo -n "nfa_path sipser-n1.nfa \"$W\": "
 	diff <($BIN/nfa_path $EXAMPLES/sipser-n1.nfa "$W" | head -1) <($SUBMIT/nfa_path $EXAMPLES/sipser-n1.nfa "$W" | head -1)
 	assert_true
     done
 
-    for W in "" 0 1 00 01 10 11 000 001 010 011 100 101 110 111; do
+    for W in "" 0 1 00 01 10 11 000 001 010 011 100 101 110; do
 	echo -n "nfa_path sipser-n1.nfa \"$W\": "
 	diff <($BIN/nfa_path $EXAMPLES/sipser-n1.nfa "$W") <($SUBMIT/nfa_path $EXAMPLES/sipser-n1.nfa "$W")
 	assert_true
