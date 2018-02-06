@@ -86,7 +86,6 @@ if [ -x $SUBMIT/re_to_nfa ]; then
 else
   echo "re_to_nfa: SKIPPED"
 fi
-    
 
 if [ -x $SUBMIT/agrep ]; then
     for W in "" a b aa ab ba bb aaa aab aba abb baa bab bba bbb; do

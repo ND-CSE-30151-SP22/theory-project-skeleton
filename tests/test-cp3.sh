@@ -80,7 +80,7 @@ if [ -x $SUBMIT/msed ]; then
 	assert_equal $(echo $W | $BIN/msed $CMDS) $(echo $W | $SUBMIT/msed $CMDS)
     done
 
-    echo "time msed:"
+    echo "time msed (this should look linear):"
     RE=
     W=
     for I in $(seq 1 100); do
