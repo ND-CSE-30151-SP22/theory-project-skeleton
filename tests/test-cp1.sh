@@ -70,6 +70,12 @@ if [ -x $SUBMIT/nfa_path ]; then
 	assert_true
     done
 
+    for W in "" a aa aaa aaaa aaaaa aaaaaa aaaaaaa aaaaaaaa aaaaaaaa aaaaaaaaaa aaaaaaaaaaa; do
+	echo -n "nfa_path n10.nfa \"$W\": "
+	diff <($BIN/nfa_path $EXAMPLES/n10.nfa "$W" | head -1) <($SUBMIT/nfa_path $EXAMPLES/n10.nfa "$W" | head -1)
+	assert_true
+    done
+
     echo "time nfa_path (this should look linear):"
     RE=
     W=
@@ -86,5 +92,3 @@ if [ -x $SUBMIT/nfa_path ]; then
 else
   echo "nfa_path: SKIPPED"
 fi
-
-
