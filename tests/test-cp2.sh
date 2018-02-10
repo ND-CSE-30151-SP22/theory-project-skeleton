@@ -7,7 +7,7 @@ EXAMPLES=$ROOT/examples
 TMPDIR=${TMPDIR:-/tmp}/test-cp2.$$
 mkdir -p $TMPDIR
 trap "rm -rf $TMPDIR" EXIT
-trap "exit 130" INT
+trap "pkill -9 -g0; exit 130" INT
 
 assert_equal () {
   if [ "$1" = "$2" ]; then
@@ -86,6 +86,7 @@ if [ -x $SUBMIT/re_to_nfa ]; then
 else
   echo "re_to_nfa: SKIPPED"
 fi
+    
 
 if [ -x $SUBMIT/agrep ]; then
     for W in "" a b aa ab ba bb aaa aab aba abb baa bab bba bbb; do
@@ -107,18 +108,24 @@ if [ -x $SUBMIT/agrep ]; then
 	echo -n "agrep \"()*\" \"$W\": "
 	assert_equal $(echo "$W" | $BIN/agrep "()*") $(echo "$W" | $SUBMIT/agrep "()*")
     done
+
+    RE="(a|)(|a)(a|)(|a)aaaa"
+    for W in "" a aa aaa aaaa aaaaa; do
+	echo -n "agrep \"$RE\" \"$W\": "
+	assert_equal $(echo "$W" | $BIN/agrep "$RE") $(echo "$W" | $SUBMIT/agrep "$RE")
+    done
     
     echo "time agrep (this should look linear):"
     RE=
     W=
     for I in $(seq 1 100); do
-	RE="(a|)${RE}a"
-	W="${W}a"
+	RE="(a|)(|a)${RE}aa"
+	W="${W}aa"
 	if [ $(($I**2/1000)) -gt $((($I-1)**2/1000)) ]; then
-	    printf "n=%3d" "$I"
-	    echo $W |
-		/usr/bin/time -p $SUBMIT/agrep $RE 2>&1 >/dev/null |
-		awk '/^(user|sys)/ { t += $2; } END { printf "%*s\n", t*100, "*"; }'
+	    printf "n=%3d: " "$I"
+	    echo $W | /usr/bin/time -p $SUBMIT/agrep $RE >/dev/null 2>$TMPDIR/n$I.time &
+	    wait $!
+	    awk '/^(user|sys)/ { t += $2; } END { printf "%*s\n", t*20, "*"; }' $TMPDIR/n$I.time
 	fi
     done
 

@@ -7,7 +7,7 @@ EXAMPLES=$ROOT/examples
 TMPDIR=${TMPDIR:-/tmp}/test-cp4.$$
 mkdir -p $TMPDIR
 trap "rm -rf $TMPDIR" EXIT
-trap "exit 130" INT
+trap "pkill -9 -g0; exit 130" INT
 
 assert_equal () {
   if [ "$1" = "$2" ]; then
@@ -63,8 +63,9 @@ if [ -x $SUBMIT/cnf_to_re ]; then
     N=1
     for I in $(seq 1 15); do
 	printf "n=%6d" "$N"
-	/usr/bin/time -p $SUBMIT/cnf_to_re "$PHI" 2>&1 >/dev/null |
-	    awk '/^(user|sys)/ { t += $2; } END { printf " t=%6.2f %*s\n", t, int(log(t*100)*10), "*"; }'
+	/usr/bin/time -p $SUBMIT/cnf_to_re "$PHI" >/dev/null 2>$TMPDIR/n$I.time &
+	wait $!
+	awk '/^(user|sys)/ { t += $2; } END { printf " t=%6.2f %*s\n", t, int(log(t*100)*10), "*"; }' $TMPDIR/n$I.time
 	PHI="${PHI}&${PHI}"
 	N=$(($N+$N))
     done

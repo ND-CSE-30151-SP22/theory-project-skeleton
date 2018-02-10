@@ -7,7 +7,7 @@ EXAMPLES=$ROOT/examples
 TMPDIR=${TMPDIR:-/tmp}/test-cp3.$$
 mkdir -p $TMPDIR
 trap "rm -rf $TMPDIR" EXIT
-trap "exit 130" INT
+trap "pkill -9 -g0; exit 130" INT
 
 assert_equal () {
   if [ "$1" = "$2" ]; then
@@ -80,17 +80,23 @@ if [ -x $SUBMIT/msed ]; then
 	assert_equal $(echo $W | $BIN/msed $CMDS) $(echo $W | $SUBMIT/msed $CMDS)
     done
 
-    echo "time msed (this should look linear):"
+    CMD="s/(a|)(|a)(a|)(|a)aaaa//"
+    for W in "" a aa aaa aaaa aaaaa; do
+	echo -n "msed -e \"$CMD\" \"$W\": "
+	assert_equal $(echo $W | $BIN/msed -e "$CMD") $(echo $W | $SUBMIT/msed -e "$CMD")
+    done
+
+    echo "time msed:"
     RE=
     W=
     for I in $(seq 1 100); do
-	RE="(a|)${RE}a"
-	W="${W}a"
+	RE="(a|)(|a)${RE}aa"
+	W="${W}aa"
 	if [ $(($I**2/1000)) -gt $((($I-1)**2/1000)) ]; then
-	    printf "n=%3d" "$I"
-	    echo $W |
-		/usr/bin/time -p $SUBMIT/msed -e "s/$RE//" 2>&1 >/dev/null |
-		awk '/^(user|sys)/ { t += $2; } END { printf "%*s\n", t*80, "*"; }'
+	    printf "n=%3d: " "$I"
+	    echo $W | /usr/bin/time -p $SUBMIT/msed -e "s/$RE//" >/dev/null 2>$TMPDIR/n$I.time &
+	    wait $!
+	    awk '/^(user|sys)/ { t += $2; } END { printf "%*s\n", t*20, "*"; }' $TMPDIR/n$I.time
 	fi
     done
 

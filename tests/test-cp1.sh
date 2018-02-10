@@ -7,7 +7,7 @@ EXAMPLES=$ROOT/examples
 TMPDIR=${TMPDIR:-/tmp}/test-cp1.$$
 mkdir -p $TMPDIR
 trap "rm -rf $TMPDIR" EXIT
-trap "exit 130" INT
+trap "pkill -9 -g0; exit 130" INT
 
 assert_true () {
   if [ $? -eq 0 ]; then
@@ -70,9 +70,9 @@ if [ -x $SUBMIT/nfa_path ]; then
 	assert_true
     done
 
-    for W in "" a aa aaa aaaa aaaaa aaaaaa aaaaaaa aaaaaaaa aaaaaaaa aaaaaaaaaa aaaaaaaaaaa; do
-	echo -n "nfa_path n10.nfa \"$W\": "
-	diff <($BIN/nfa_path $EXAMPLES/n10.nfa "$W" | head -1) <($SUBMIT/nfa_path $EXAMPLES/n10.nfa "$W" | head -1)
+    for W in "" a aa aaa aaaa aaaaa; do
+	echo -n "nfa_path slow2.nfa \"$W\": "
+	diff <($BIN/nfa_path $EXAMPLES/slow2.nfa "$W" | head -1) <($SUBMIT/nfa_path $EXAMPLES/slow2.nfa "$W" | head -1)
 	assert_true
     done
 
@@ -80,12 +80,14 @@ if [ -x $SUBMIT/nfa_path ]; then
     RE=
     W=
     for I in $(seq 1 100); do
-	RE="(a|)${RE}a"
-	W="${W}a"
+	RE="(a|)(|a)${RE}aa"
+	W="${W}aa"
 	if [ $(($I**2/1000)) -gt $((($I-1)**2/1000)) ]; then
-	    printf "n=%3d" "$I"
-	    /usr/bin/time -p $SUBMIT/nfa_path <($BIN/re_to_nfa $RE) "$W" 2>&1 >/dev/null |
-		awk '/^(user|sys)/ { t += $2; } END { printf "%*s\n", t*100, "*"; }'
+	    printf "n=%3d: " "$I"
+	    $BIN/re_to_nfa $RE > $TMPDIR/n$I.nfa
+	    /usr/bin/time -p $SUBMIT/nfa_path $TMPDIR/n$I.nfa "$W" >/dev/null 2>$TMPDIR/n$I.time &
+	    wait $!
+	    awk '/^(user|sys)/ { t += $2; } END { printf "%*s\n", t*50, "*"; }' $TMPDIR/n$I.time
 	fi
     done
 
