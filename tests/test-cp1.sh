@@ -33,46 +33,46 @@ assert_equal () {
   fi
 }
 
-if [ -x $SUBMIT/nfa_path ]; then
+if [ -x "$SUBMIT/nfa_path" ]; then
     for W in 010110 111; do
 	echo -n "nfa_path sipser-n1.nfa \"$W\": "
-	diff <($BIN/nfa_path $EXAMPLES/sipser-n1.nfa "$W" | head -1) <($SUBMIT/nfa_path $EXAMPLES/sipser-n1.nfa "$W" | head -1)
+	diff <("$BIN/nfa_path" "$EXAMPLES/sipser-n1.nfa" "$W" | head -1) <("$SUBMIT/nfa_path" "$EXAMPLES/sipser-n1.nfa" "$W" | head -1)
 	assert_true
     done
 
     for W in "" 0 1 00 01 10 11 000 001 010 011 100 101 110; do
 	echo -n "nfa_path sipser-n1.nfa \"$W\": "
-	diff <($BIN/nfa_path $EXAMPLES/sipser-n1.nfa "$W") <($SUBMIT/nfa_path $EXAMPLES/sipser-n1.nfa "$W")
+	diff <("$BIN/nfa_path" "$EXAMPLES/sipser-n1.nfa" "$W") <("$SUBMIT/nfa_path" "$EXAMPLES/sipser-n1.nfa" "$W")
 	assert_true
     done
 
     for W in "" 000000; do
 	echo -n "nfa_path sipser-n3.nfa \"$W\": "
-	diff <($BIN/nfa_path $EXAMPLES/sipser-n3.nfa "$W" | head -1) <($SUBMIT/nfa_path $EXAMPLES/sipser-n3.nfa "$W" | head -1)
+	diff <("$BIN/nfa_path" "$EXAMPLES/sipser-n3.nfa" "$W" | head -1) <("$SUBMIT/nfa_path" "$EXAMPLES/sipser-n3.nfa" "$W" | head -1)
 	assert_true
     done
 
     for W in 0 00 000 0000 00000; do
 	echo -n "nfa_path sipser-n3.nfa \"$W\": "
-	diff <($BIN/nfa_path $EXAMPLES/sipser-n3.nfa "$W") <($SUBMIT/nfa_path $EXAMPLES/sipser-n3.nfa "$W")
+	diff <("$BIN/nfa_path" "$EXAMPLES/sipser-n3.nfa" "$W") <("$SUBMIT/nfa_path" "$EXAMPLES/sipser-n3.nfa" "$W")
 	assert_true
     done
 
     for W in "" a baba baa b bb babba; do
 	echo -n "nfa_path sipser-n4.nfa \"$W\": "
-	diff <($BIN/nfa_path $EXAMPLES/sipser-n4.nfa "$W") <($SUBMIT/nfa_path $EXAMPLES/sipser-n4.nfa "$W")
+	diff <("$BIN/nfa_path" "$EXAMPLES/sipser-n4.nfa" "$W") <("$SUBMIT/nfa_path" "$EXAMPLES/sipser-n4.nfa" "$W")
 	assert_true
     done
 
     for W in "" a; do
 	echo -n "nfa_path cycle.nfa \"$W\": "
-	diff <($BIN/nfa_path $EXAMPLES/cycle.nfa "$W" | head -1) <($SUBMIT/nfa_path $EXAMPLES/cycle.nfa "$W" | head -1)
+	diff <("$BIN/nfa_path" "$EXAMPLES/cycle.nfa" "$W" | head -1) <("$SUBMIT/nfa_path" "$EXAMPLES/cycle.nfa" "$W" | head -1)
 	assert_true
     done
 
     for W in "" a aa aaa aaaa aaaaa; do
 	echo -n "nfa_path slow2.nfa \"$W\": "
-	diff <($BIN/nfa_path $EXAMPLES/slow2.nfa "$W" | head -1) <($SUBMIT/nfa_path $EXAMPLES/slow2.nfa "$W" | head -1)
+	diff <("$BIN/nfa_path" "$EXAMPLES/slow2.nfa" "$W" | head -1) <("$SUBMIT/nfa_path" "$EXAMPLES/slow2.nfa" "$W" | head -1)
 	assert_true
     done
 
@@ -84,8 +84,8 @@ if [ -x $SUBMIT/nfa_path ]; then
 	W="${W}aa"
 	if [ $(($I**2/1000)) -gt $((($I-1)**2/1000)) ]; then
 	    printf "n=%3d: " "$I"
-	    $BIN/re_to_nfa $RE > $TMPDIR/n$I.nfa
-	    /usr/bin/time -p $SUBMIT/nfa_path $TMPDIR/n$I.nfa "$W" >/dev/null 2>$TMPDIR/n$I.time &
+	    "$BIN/re_to_nfa" $RE > $TMPDIR/n$I.nfa
+	    /usr/bin/time -p "$SUBMIT/nfa_path" $TMPDIR/n$I.nfa "$W" >/dev/null 2>$TMPDIR/n$I.time &
 	    wait $!
 	    awk '/^(user|sys)/ { t += $2; } END { printf "%*s\n", t*50, "*"; }' $TMPDIR/n$I.time
 	fi
