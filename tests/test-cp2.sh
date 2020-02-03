@@ -91,28 +91,28 @@ fi
 if [ -x "$SUBMIT/agrep" ]; then
     for W in "" a b aa ab ba bb aaa aab aba abb baa bab bba bbb; do
 	echo -n "agrep \"(ab|a)*\" \"$W\": "
-	assert_equal $(echo "$W" | "$BIN/agrep" "(ab|a)*") $(echo "$W" | "$SUBMIT/agrep" "(ab|a)*")
+	assert_equal "$(echo "$W" | "$BIN/agrep" "(ab|a)*")" "$(echo "$W" | "$SUBMIT/agrep" "(ab|a)*")"
     done
 
     for W in "" a b aa ab ba bb aba abaa abab aaba baba aaaba ababa baaba bbaba; do
 	echo -n "agrep \"(a|b)*aba\" \"$W\": "
-	assert_equal $(echo "$W" | "$BIN/agrep" "(a|b)*aba") $(echo "$W" | "$SUBMIT/agrep" "(a|b)*aba")
+	assert_equal "$(echo "$W" | "$BIN/agrep" "(a|b)*aba")" "$(echo "$W" | "$SUBMIT/agrep" "(a|b)*aba")"
     done
 
     for W in "" a; do
 	echo -n "agrep \"\" \"$W\": "
-	assert_equal $(echo "$W" | "$BIN/agrep" "") $(echo "$W" | "$SUBMIT/agrep" "")
+	assert_equal "$(echo "$W" | "$BIN/agrep" "")" "$(echo "$W" | "$SUBMIT/agrep" "")"
     done
 
     for W in "" a; do
 	echo -n "agrep \"()*\" \"$W\": "
-	assert_equal $(echo "$W" | "$BIN/agrep" "()*") $(echo "$W" | "$SUBMIT/agrep" "()*")
+	assert_equal "$(echo "$W" | "$BIN/agrep" "()*")" "$(echo "$W" | "$SUBMIT/agrep" "()*")"
     done
 
     RE="(a|)(|a)(a|)(|a)aaaa"
     for W in "" a aa aaa aaaa aaaaa; do
 	echo -n "agrep \"$RE\" \"$W\": "
-	assert_equal $(echo "$W" | "$BIN/agrep" "$RE") $(echo "$W" | "$SUBMIT/agrep" "$RE")
+	assert_equal "$(echo "$W" | "$BIN/agrep" "$RE")" "$(echo "$W" | "$SUBMIT/agrep" "$RE")"
     done
     
     echo "time agrep (this should look linear):"
@@ -123,9 +123,10 @@ if [ -x "$SUBMIT/agrep" ]; then
 	W="${W}aa"
 	if [ $(($I**2/1000)) -gt $((($I-1)**2/1000)) ]; then
 	    printf "n=%3d: " "$I"
-	    echo $W | /usr/bin/time -p "$SUBMIT/agrep" $RE >/dev/null 2>$TMPDIR/n$I.time &
+	    echo $W | /usr/bin/time -p "$SUBMIT/agrep" $RE >$TMPDIR/n$I.out 2>$TMPDIR/n$I.time &
 	    wait $!
-	    awk '/^(user|sys)/ { t += $2; } END { printf "%*s\n", t*20, "*"; }' $TMPDIR/n$I.time
+            diff <(echo $W | "$BIN/agrep" $RE) $TMPDIR/n$I.out || echo "FAILED"
+	    awk '/^(user|sys)/ { t += $2; } !/(^(real|user|sys))/ { print "WARNING:", $0; } END { printf "%*s\n", t*20, "*"; }' $TMPDIR/n$I.time
 	fi
     done
 

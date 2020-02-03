@@ -94,9 +94,10 @@ if [ -x "$SUBMIT/msed" ]; then
 	W="${W}aa"
 	if [ $(($I**2/1000)) -gt $((($I-1)**2/1000)) ]; then
 	    printf "n=%3d: " "$I"
-	    echo $W | /usr/bin/time -p "$SUBMIT/msed" -e "s/$RE//" >/dev/null 2>$TMPDIR/n$I.time &
+	    echo $W | /usr/bin/time -p "$SUBMIT/msed" -e "s/$RE//" >$TMPDIR/n$I.out 2>$TMPDIR/n$I.time &
 	    wait $!
-	    awk '/^(user|sys)/ { t += $2; } END { printf "%*s\n", t*20, "*"; }' $TMPDIR/n$I.time
+            diff <(echo $W | "$BIN/msed" -e "s/$RE//") $TMPDIR/n$I.out || echo "FAILED"
+	    awk '/^(user|sys)/ { t += $2; } !/^(real|user|sys)/ { print "WARNING:", $0; } END { printf "%*s\n", t*20, "*"; }' $TMPDIR/n$I.time
 	fi
     done
 

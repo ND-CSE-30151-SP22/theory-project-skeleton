@@ -85,9 +85,10 @@ if [ -x "$SUBMIT/nfa_path" ]; then
 	if [ $(($I**2/1000)) -gt $((($I-1)**2/1000)) ]; then
 	    printf "n=%3d: " "$I"
 	    "$BIN/re_to_nfa" $RE > $TMPDIR/n$I.nfa
-	    /usr/bin/time -p "$SUBMIT/nfa_path" $TMPDIR/n$I.nfa "$W" >/dev/null 2>$TMPDIR/n$I.time &
+	    /usr/bin/time -p "$SUBMIT/nfa_path" $TMPDIR/n$I.nfa "$W" >$TMPDIR/n$I.out 2>$TMPDIR/n$I.time &
 	    wait $!
-	    awk '/^(user|sys)/ { t += $2; } END { printf "%*s\n", t*50, "*"; }' $TMPDIR/n$I.time
+            diff <("$BIN/nfa_path" $TMPDIR/n$I.nfa "$W") $TMPDIR/n$I.out || echo "FAILED"
+	    awk '/^(user|sys)/ { t += $2; } !/^(real|user|sys)/ { print "WARNING:", $0; } END { printf "%*s\n", t*50, "*"; }' $TMPDIR/n$I.time
 	fi
     done
 
