@@ -57,8 +57,8 @@ for OP in union concat; do
     for NFA1 in "$EXAMPLES"/sipser-n{1,2,3,4}.nfa; do
       for NFA2 in "$EXAMPLES"/sipser-n{1,2,3,4}.nfa; do
 
-        echo -n "${OP}_nfa $(basename $NFA1) $(basename $NFA2): "
-        "$BIN/compare_nfa" <("$BIN/${OP}_nfa" $NFA1 $NFA2) <("$SUBMIT/${OP}_nfa" $NFA1 $NFA2) >/dev/null
+        echo -n "${OP}_nfa $(basename "$NFA1") $(basename "$NFA2"): "
+        "$BIN/compare_nfa" <("$BIN/${OP}_nfa" "$NFA1" "$NFA2") <("$SUBMIT/${OP}_nfa" "$NFA1" "$NFA2") >/dev/null
         assert_true
       done
     done
@@ -69,8 +69,8 @@ done
 
 if [ -x "$SUBMIT/star_nfa" ]; then
   for NFA in "$EXAMPLES"/sipser-n{1,2,3,4}.nfa; do
-    echo -n "star_nfa $(basename $NFA): "
-    "$BIN/compare_nfa" <("$BIN/star_nfa" $NFA) <("$SUBMIT/star_nfa" $NFA) >/dev/null
+    echo -n "star_nfa $(basename "$NFA"): "
+    "$BIN/compare_nfa" <("$BIN/star_nfa" "$NFA") <("$SUBMIT/star_nfa" "$NFA") >/dev/null
     assert_true
   done
 else
