@@ -64,15 +64,33 @@ if [ -x "$SUBMIT/nfa_path" ]; then
 	assert_true
     done
 
+    for W in "" a aa aaa; do
+	echo -n "nfa_path epsilons.nfa \"$W\": "
+	diff <("$BIN/nfa_path" "$EXAMPLES/epsilons.nfa" "$W" | head -1) <("$SUBMIT/nfa_path" "$EXAMPLES/epsilons.nfa" "$W" | head -1)
+	assert_true
+    done
+
     for W in "" a; do
 	echo -n "nfa_path cycle.nfa \"$W\": "
 	diff <("$BIN/nfa_path" "$EXAMPLES/cycle.nfa" "$W" | head -1) <("$SUBMIT/nfa_path" "$EXAMPLES/cycle.nfa" "$W" | head -1)
 	assert_true
     done
 
+    for W in "" a aa aaa; do
+	echo -n "nfa_path slow1.nfa \"$W\": "
+	diff <("$BIN/nfa_path" "$EXAMPLES/slow2.nfa" "$W" | head -1) <("$SUBMIT/nfa_path" "$EXAMPLES/slow2.nfa" "$W" | head -1)
+	assert_true
+    done
+
     for W in "" a aa aaa aaaa aaaaa; do
 	echo -n "nfa_path slow2.nfa \"$W\": "
-	diff <("$BIN/nfa_path" "$EXAMPLES/slow2.nfa" "$W" | head -1) <("$SUBMIT/nfa_path" "$EXAMPLES/slow2.nfa" "$W" | head -1)
+	diff <("$BIN/nfa_path" "$EXAMPLES/slow3.nfa" "$W" | head -1) <("$SUBMIT/nfa_path" "$EXAMPLES/slow3.nfa" "$W" | head -1)
+	assert_true
+    done
+
+    for W in "" a aa aaa aaaa aaaaa aaaaaa aaaaaaa; do
+	echo -n "nfa_path slow3.nfa \"$W\": "
+	diff <("$BIN/nfa_path" "$EXAMPLES/slow3.nfa" "$W" | head -1) <("$SUBMIT/nfa_path" "$EXAMPLES/slow3.nfa" "$W" | head -1)
 	assert_true
     done
 

@@ -34,7 +34,7 @@ assert_false () {
 }
 
 if [ -x "$SUBMIT/parse_re" ]; then
-  for REGEXP in "(ab|a)*" "(a|b)*aba" "" "a" "a*" "ab" "a|b" "a*b*" "(ab)*" "ab|cd" "(ab)|(cd)" "a*|b*" "(a|b)*" "(a)" "((a))" "()" "|" "(|)"; do
+  for REGEXP in "(ab|a)*" "(a|b)*aba" "" "a" "a*" "ab" "abc" "abcd" "a|b" "a|b|c" "a|b|c|d" "a*b*" "(ab)*" "ab|cd" "(ab)|(cd)" "a*|b*" "(a|b)*" "(a)" "((a))" "a(b)" "(a)b" "()" "|" "(|)" "(a|)" "(|a)" "a||b"; do
     echo -n 'parse_re "'"$REGEXP"'": '
     assert_equal "$("$BIN/parse_re" "$REGEXP")" "$("$SUBMIT/parse_re" "$REGEXP")"
   done
@@ -78,7 +78,7 @@ else
 fi
 
 if [ -x "$SUBMIT/re_to_nfa" ]; then
-  for REGEXP in "(ab|a)*" "(a|b)*aba" "" "a" "a*" "ab" "a|b" "a*b*" "(ab)*" "ab|cd" "(ab)|(cd)" "a*|b*" "(a|b)*" "(a)" "((a))" "()" "|" "(|)"; do
+  for REGEXP in "(ab|a)*" "(a|b)*aba" "" "a" "a*" "ab" "abc" "abcd" "a|b" "a|b|c" "a|b|c|d" "a*b*" "(ab)*" "ab|cd" "(ab)|(cd)" "a*|b*" "(a|b)*" "(a)" "((a))" "a(b)" "(a)b" "()" "|" "(|)" "(a|)" "(|a)" "a||b"; do
       echo -n 're_to_nfa "'"$REGEXP"'": '
       "$BIN/compare_nfa" <("$BIN/re_to_nfa" "$REGEXP") <("$SUBMIT/re_to_nfa" "$REGEXP") > /dev/null
       assert_true
@@ -109,10 +109,11 @@ if [ -x "$SUBMIT/agrep" ]; then
 	assert_equal "$(echo "$W" | "$BIN/agrep" "()*")" "$(echo "$W" | "$SUBMIT/agrep" "()*")"
     done
 
-    RE="(a|)(|a)(a|)(|a)aaaa"
-    for W in "" a aa aaa aaaa aaaaa; do
-	echo -n "agrep \"$RE\" \"$W\": "
-	assert_equal "$(echo "$W" | "$BIN/agrep" "$RE")" "$(echo "$W" | "$SUBMIT/agrep" "$RE")"
+    for RE in "(a|)(|a)aa" "(a|)(|a)(a|)(|a)aaaa" "(a|)(|a)(a|)(|a)(a|)(|a)aaaaaa"; do
+        for W in "" a aa aaa aaaa aaaaa aaaaaaa; do
+  	    echo -n "agrep \"$RE\" \"$W\": "
+	    assert_equal "$(echo "$W" | "$BIN/agrep" "$RE")" "$(echo "$W" | "$SUBMIT/agrep" "$RE")"
+        done
     done
     
     echo "time agrep (this should look linear):"
