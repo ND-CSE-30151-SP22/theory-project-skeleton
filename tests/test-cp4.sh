@@ -40,12 +40,19 @@ if [ -x "$SUBMIT/bgrep" ]; then
 	    assert_equal $(echo "$W" | "$BIN/bgrep" "$REGEXP") $(echo "$W" | "$SUBMIT/bgrep" "$REGEXP")
 	done
     done
+    
+    for REGEXP in "(a*)(a*)#\1#\1"; do
+	for W in "aa##" "aa#a#a" "aa#aa#aa" "aa#a#aa" "aa#aa#a"; do
+	    echo -n "bgrep \"$REGEXP\" \"$W\": "
+	    assert_equal $(echo "$W" | "$BIN/bgrep" "$REGEXP") $(echo "$W" | "$SUBMIT/bgrep" "$REGEXP")
+	done
+    done
 else
     echo "bgrep: SKIPPED"
 fi
 
 if [ -x "$SUBMIT/cnf_to_re" ]; then
-    for PHI in "(x)" "(x)&(!x)" "(x1|x1|x2)&(!x1|!x2|!x2)&(!x1|x2|x2)"; do
+    for PHI in "(x)" "(!x)" "(x)&(x)" "(x)&(!x)" "(x|x)" "(x|!x)" "(x|x|x)" "(x|x|x)&(!x|!x|!x)" "(x1|x1|x2)&(!x1|!x2|!x2)&(!x1|x2|x2)" "(x2|!x1|!x1)&(!x1|!x2|!x2)&(x1|!x2|!x2)&(x1|x2|x1)"; do
 	echo -n "cnf_to_re \"$PHI\": "
 	"$SUBMIT/cnf_to_re" "$PHI" > $TMPDIR/cnf_to_re.out
 	RE=$(perl -ne 'if (/^regexp:(.*)$/) { print "$1\n"; }' < $TMPDIR/cnf_to_re.out)
