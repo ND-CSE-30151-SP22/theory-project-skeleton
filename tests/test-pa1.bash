@@ -13,14 +13,6 @@ mkdir -p $TMPDIR
 trap "rm -rf -- $TMPDIR" EXIT
 trap "pkill -9 -g0; exit 130" INT
 
-assert_true() {
-  if [[ $? -eq 0 ]]; then
-    echo PASSED
-  else
-    echo FAILED
-  fi
-}
-
 test_inputs() {
   local nfa_file=$1
   local check_path=$2
@@ -63,11 +55,20 @@ if [[ -x $SUBMIT/nfa_path ]]; then
 	W="${W}aa"
 	if [ $(($I**2/1000)) -gt $((($I-1)**2/1000)) ]; then
 	    printf "n=%3d: " "$I"
-	    "$BIN/re_to_nfa" $RE > $TMPDIR/n$I.nfa
-            (time -p "$SUBMIT/nfa_path" $TMPDIR/n$I.nfa "$W") >$TMPDIR/n$I.out 2>$TMPDIR/n$I.time &
-	    wait $!
-            diff <("$BIN/nfa_path" $TMPDIR/n$I.nfa "$W") $TMPDIR/n$I.out || echo "FAILED"
-	    awk '/^(user|sys)/ { t += $2; } !/^(real|user|sys)/ { print "WARNING:", $0; } END { printf "%*s\n", t*50, "*"; }' $TMPDIR/n$I.time
+            nfa_file=$TMPDIR/n$I.nfa
+            stdout=$TMPDIR/n$I.out
+            timefile=$TMPDIR/n$I.time
+	    "$BIN/re_to_nfa" "$RE" > "$nfa_file"
+            timeout 5s bash -c 'time -p "$@"' -- "$SUBMIT/nfa_path" "$nfa_file" "$W" >"$stdout" 2>"$timefile" &
+            wait $! && rc=$? || rc=$?
+            if [[ $rc -eq 124 ]]; then
+              echo "FAILED (TIMEOUT)"
+              echo "Running command again for debugging:"
+              timeout 5s "$SUBMIT/nfa_path" "$nfa_file" "$W" || true
+            else
+              diff <("$BIN/nfa_path" "$nfa_file" "$W") "$stdout" || echo "FAILED"
+              awk '/^(user|sys)/ { t += $2; } !/^(real|user|sys)/ { print "WARNING:", $0; } END { printf "%*s\n", t*50, "*"; }' "$timefile"
+            fi
 	fi
     done
 
